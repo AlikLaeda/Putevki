@@ -16,6 +16,30 @@ import tkinter.font as tkFont
 import json
 import time
 
+# Функция сохранения
+#
+def save_settings():
+    # Сохраняем словари с водителями и автобусами а данные из формы в
+    # файл. Словари меняются редко, но перезаписываем их каждый раз.
+    # Обязательно ensure_ascii=False без этого кирилические символы
+    # экранируются.
+    data = {
+        'dict_of_buses': dict_of_buses,
+        'dict_of_drivers': dict_of_drivers,
+        'txt_ser':txt_ser.get(),
+        'txt_nom':txt_nom.get(),
+        'txt_chi':txt_chi.get(),
+        'txt_mes':txt_mes.get(),
+        'txt_chiu':txt_chiu.get(),
+        'txt_mesu':txt_mesu.get(),
+        'txt_nac':txt_nac.get(),
+        'txt_kon':txt_kon.get(),
+        'txt_per':txt_per.get()
+        }
+    with open("settings.json", "w", encoding="utf-8") as write_file:
+        json.dump(data, write_file, ensure_ascii=False, indent='  ')
+
+
 
 # Вставляем в поля начала и конца смены, перерыв
 # несколько стандартных сценариев подвешенных на кнопки.
@@ -147,23 +171,9 @@ def clic_create():
 
     # Сохраняем словари с водителями и автобусами а данные из формы в
     # файл. Словари меняются редко, но перезаписываем их каждый раз.
-    # Обязательно ensure_ascii=False без этого кирилические символы
-    # экранируются.
-    data = {
-        'dict_of_buses': dict_of_buses,
-        'dict_of_drivers': dict_of_drivers,
-        'txt_ser':txt_ser.get(),
-        'txt_nom':txt_nom.get(),
-        'txt_chi':txt_chi.get(),
-        'txt_mes':txt_mes.get(),
-        'txt_chiu':txt_chiu.get(),
-        'txt_mesu':txt_mesu.get(),
-        'txt_nac':txt_nac.get(),
-        'txt_kon':txt_kon.get(),
-        'txt_per':txt_per.get()
-        }
-    with open("settings.json", "w", encoding="utf-8") as write_file:
-        json.dump(data, write_file, ensure_ascii=False, indent='  ')
+    save_settings()
+
+
     
 #
 #Начинаем выполнять код отсюда
@@ -357,54 +367,221 @@ combo_contry.grid(column=0, row=6, columnspan=3)
 # Блок вкладки "Новый водитель"
 #
 
+def lbox_drivers_select(event):
+    driver_select = lbox_drivers.curselection()
+    if len(driver_select) > 0:
+        FIO_driver = lbox_drivers.get(driver_select)
+        driver = dict_of_drivers.get(FIO_driver)
+        txt_FIO.delete(0, END)
+        txt_FIO.insert(0, FIO_driver)
+        txt_F.delete(0, END)
+        txt_F.insert(0, driver[0])
+        txt_I.delete(0, END)
+        txt_I.insert(0, driver[1])
+        txt_O.delete(0, END)
+        txt_O.insert(0, driver[2])
+        txt_nomer.delete(0, END)
+        txt_nomer.insert(0, driver[3])
+        txt_rights.delete(0, END)
+        txt_rights.insert(0, driver[4])
+        txt_card.delete(0, END)
+        txt_card.insert(0, driver[5])
+        txt_snils.delete(0, END)
+        txt_snils.insert(0, driver[6])
+        btn_drv_remake["state"] = NORMAL
+        btn_drv_delete["state"] = NORMAL
+    else:
+        btn_drv_delete["state"] = DISABLED
 
+
+
+
+
+def clic_add_driver():
+    driver = []
+    driver.append(txt_F.get())
+    driver.append(txt_I.get())
+    driver.append(txt_O.get())
+    driver.append(txt_nomer.get())
+    driver.append(txt_rights.get())
+    driver.append(txt_card.get())
+    driver.append(txt_snils.get())
+    dict_of_drivers.update({txt_FIO.get(): driver})
+    lbox_drivers.insert(lbox_drivers.size(), txt_FIO.get())
+    save_settings()
+
+
+
+def clic_remake_driver():
+    clic_add_driver()
+
+def clic_delete_driver():
+    driver_select = lbox_drivers.curselection()
+    dict_of_drivers.pop(lbox_drivers.get(driver_select))
+    lbox_drivers.delete(driver_select)
+    save_settings()    
+
+# 
+lbox_drivers = Listbox(tab2, listvariable=Variable(value=list(dict_of_drivers.keys())), selectmode=SINGLE)
+lbox_drivers.grid(column=1, row=1, rowspan=7)
+lbox_drivers.bind("<<ListboxSelect>>", lbox_drivers_select)
+
+btn_drv_create = Button(tab2, text="Создать", command=clic_add_driver)  
+btn_drv_create.grid(column=3, row=1)
+
+btn_drv_remake = Button(tab2, text="Изменить", command=clic_remake_driver, state=["disabled"])  
+btn_drv_remake.grid(column=3, row=3)
+
+btn_drv_delete = Button(tab2, text="Удалить", command=clic_delete_driver, state=["disabled"])  
+btn_drv_delete.grid(column=3, row=7)
+
+lb_FIO = Label(tab2, text="ФИО")
+lb_FIO.grid(column=5, row=1)
+txt_FIO = Entry(tab2, width=10)
+txt_FIO.grid(column=6, row=1)
+
+lb_F = Label(tab2, text="Фамилия")
+lb_F.grid(column=5, row=3)
+txt_F = Entry(tab2, width=10)
+txt_F.grid(column=6, row=3)
+
+lb_I = Label(tab2, text="Имя")
+lb_I.grid(column=7, row=3)
+txt_I = Entry(tab2, width=10)
+txt_I.grid(column=8, row=3)
+
+lb_O = Label(tab2, text="Отчество")
+lb_O.grid(column=5, row=4)
+txt_O = Entry(tab2, width=10)
+txt_O.grid(column=6, row=4)
+
+lb_nomer = Label(tab2, text="Номер")
+lb_nomer.grid(column=5, row=5)
+txt_nomer = Entry(tab2, width=10)
+txt_nomer.grid(column=6, row=5)
+
+lb_rights = Label(tab2, text="Права")
+lb_rights.grid(column=7, row=5)
+txt_rights = Entry(tab2, width=10)
+txt_rights.grid(column=8, row=5)
+
+lb_card = Label(tab2, text="Карта")
+lb_card.grid(column=5, row=6)
+txt_card = Entry(tab2, width=10)
+txt_card.grid(column=6, row=6)
+
+lb_snils = Label(tab2, text="СНИЛС")
+lb_snils.grid(column=7, row=6)
+txt_snils = Entry(tab2, width=10)
+txt_snils.grid(column=8, row=6)
 
 
 #
-lb_F = Label(tab2, text="Фамилия")  
-lb_F.grid(column=2, row=1)  
-txt_F = Entry(tab2,width=10)  
-txt_F.grid(column=3, row=1)
+# Блок вкладки "Новый водитель"
+#
+
+def lbox_buses_select(event):
+    bus_select = lbox_buses.curselection()
+    if len(driver_select) > 0:
+        FIO_driver = lbox_buses.get(bus_select)
+        bus = dict_of_buses.get(FIO_driver)
+        txt_gar_nomer.delete(0, END)
+        txt_gar_nomer.insert(0, FIO_driver)
+        txt_F.delete(0, END)
+        txt_F.insert(0, bus[0])
+        txt_I.delete(0, END)
+        txt_I.insert(0, bus[1])
+        txt_O.delete(0, END)
+        txt_O.insert(0, bus[2])
+        txt_nomer.delete(0, END)
+        txt_nomer.insert(0, bus[3])
+        txt_rights.delete(0, END)
+        txt_rights.insert(0, bus[4])
+        txt_card.delete(0, END)
+        txt_card.insert(0, bus[5])
+        txt_snils.delete(0, END)
+        txt_snils.insert(0, bus[6])
+        btn_bus_remake["state"] = NORMAL
+        btn_bus_delete["state"] = NORMAL
+    else:
+        btn_bus_delete["state"] = DISABLED
 
 
-lb_I = Label(tab2, text="Имя")  
-lb_I.grid(column=4, row=1)  
-txt_I = Entry(tab2,width=10)  
-txt_I.grid(column=5, row=1)
 
 
-lb_O = Label(tab2, text="Отчество")  
-lb_O.grid(column=2, row=4)  
-txt_O = Entry(tab2,width=10)  
-txt_O.grid(column=3, row=4)
+
+def clic_add_bus():
+    bus = []
+    bus.append(txt_F.get())
+    bus.append(txt_I.get())
+    bus.append(txt_O.get())
+    bus.append(txt_nomer.get())
+    bus.append(txt_rights.get())
+    bus.append(txt_card.get())
+    bus.append(txt_snils.get())
+    dict_of_buses.update({txt_gar_nomer.get(): bus})
+    lbox_buses.insert(lbox_buses.size(), txt_gar_nomer.get())
+    save_settings()
 
 
-lb_nomer = Label(tab2, text="Номер")  
-lb_nomer.grid(column=2, row=5)  
-txt_nomer = Entry(tab2,width=10)  
-txt_nomer.grid(column=3, row=5)
 
+def clic_remake_bus():
+    clic_add_bus()
 
-lb_rights = Label(tab2, text="Права")  
-lb_rights.grid(column=4, row=5)  
-txt_rights = Entry(tab2,width=10)  
-txt_rights.grid(column=5, row=5)
+def clic_delete_bus():
+    bus_select = lbox_buses.curselection()
+    dict_of_buses.pop(lbox_buses.get(bus_select))
+    lbox_buses.delete(bus_select)
+    save_settings()    
 
+# 
+lbox_buses = Listbox(tab3, listvariable=Variable(value=list(dict_of_drivers.keys())), selectmode=SINGLE)
+lbox_buses.grid(column=1, row=1, rowspan=7)
+lbox_buses.bind("<<ListboxSelect>>", lbox_buses_select)
 
-lb_card = Label(tab2, text="Карта")  
-lb_card.grid(column=2, row=6)  
-txt_card = Entry(tab2,width=10)  
-txt_card.grid(column=3, row=6)
+btn_bus_create = Button(tab3, text="Создать", command=clic_add_bus)  
+btn_bus_create.grid(column=3, row=1)
 
+btn_bus_remake = Button(tab3, text="Изменить", command=clic_remake_bus, state=["disabled"])  
+btn_bus_remake.grid(column=3, row=3)
 
-lb_snils = Label(tab2, text="СНИЛС")  
-lb_snils.grid(column=4, row=6)  
-txt_snils = Entry(tab2,width=10)  
-txt_snils.grid(column=5, row=6)
+btn_bus_delete = Button(tab3, text="Удалить", command=clic_delete_bus, state=["disabled"])  
+btn_bus_delete.grid(column=3, row=7)
 
+lb_gar_nomer = Label(tab3, text="Гаражный номер")
+lb_gar_nomer.grid(column=5, row=1)
+txt_gar_nomer = Entry(tab3, width=10)
+txt_gar_nomer.grid(column=6, row=1)
+
+lb_gos_nomer = Label(tab3, text="Гос. номер")
+lb_gos_nomer.grid(column=5, row=3)
+txt_gos_nomer = Entry(tab3, width=10)
+txt_gos_nomer.grid(column=6, row=3)
+
+lb_cat = Label(tab3, text="Категория")
+lb_cat.grid(column=7, row=3)
+txt_cat = Entry(tab3, width=10)
+txt_cat.grid(column=8, row=3)
+
+lb_make = Label(tab3, text="Марка")
+lb_make.grid(column=5, row=4)
+txt_make = Entry(tab3, width=10)
+txt_make.grid(column=6, row=4)
+
+lb_model = Label(tab3, text="Модель")
+lb_model.grid(column=7, row=4)
+txt_model = Entry(tab3, width=10)
+txt_model.grid(column=8, row=4)
+
+lb_owner = Label(tab3, text="Владелец")
+lb_owner.grid(column=7, row=4)
+txt_owner = Entry(tab3, width=10)
+txt_owner.grid(column=8, row=4)
+
+lb_master = Label(tab3, text="Выпускающая организация (полное название)")
+lb_master.grid(column=7, row=4)
+txt_master = Entry(tab3, width=10)
+txt_master.grid(column=8, row=4)
 
 # Включаем обработчик событий окна
 window.mainloop()
-
-
-
